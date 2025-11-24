@@ -11,13 +11,14 @@ const prisma = new PrismaClient();
 // En producción, esto debería venir de process.env.SECRET_KEY
 const SECRET_KEY = process.env.SECRET_KEY || 'secreto_super_seguro_bancario'; 
 
-// --- CONFIGURACIÓN DEL TRANSPORTE DE CORREO ---
-// Usa variables de entorno para seguridad en producción
+// --- CONFIGURACIÓN ROBUSTA PARA GMAIL EN LA NUBE ---
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // true para puerto 465, false para otros
   auth: {
-    user: process.env.SMTP_USER || 'TU_CORREO_REAL@gmail.com', 
-    pass: process.env.SMTP_PASS || 'TU_PASS_DE_APLICACION'       
+    user: process.env.SMTP_USER, 
+    pass: process.env.SMTP_PASS
   }
 });
 
