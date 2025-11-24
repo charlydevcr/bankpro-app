@@ -2,40 +2,46 @@
 const express = require('express');
 const cors = require('cors');
 
-// Imports
+// --- IMPORTACIÓN DE RUTAS ---
+const authRoutes = require('./routes/auth.routes.js');
 const clientesRoutes = require('./routes/clientes.routes.js');
 const cuentasRoutes = require('./routes/cuentas.routes.js');
 const movimientosRoutes = require('./routes/movimientos.routes.js');
 const reportesRoutes = require('./routes/reportes.routes.js');
-const configuracionRoutes = require('./routes/configuracion.routes.js'); // <--- NUEVO
-const authRoutes = require('./routes/auth.routes.js'); // <--- NUEVO
-const usuariosRoutes = require('./routes/usuarios.routes.js'); // <--- NUEVO
+const configuracionRoutes = require('./routes/configuracion.routes.js');
+const usuariosRoutes = require('./routes/usuarios.routes.js');
 
-// Configuración
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middlewares
-app.use(cors());
+// --- CONFIGURACIÓN CORS (CRÍTICO PARA PRODUCCIÓN) ---
+// Esto permite que tu Frontend en Vercel hable con este Backend en Railway
+app.use(cors({
+    origin: '*', // Permite el acceso desde cualquier dominio
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Middleware para entender JSON
 app.use(express.json());
 
-// Rutas
+// --- DEFINICIÓN DE ENDPOINTS ---
+app.use('/api/auth', authRoutes);
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/cuentas', cuentasRoutes);
 app.use('/api/movimientos', movimientosRoutes);
 app.use('/api/reportes', reportesRoutes);
-app.use('/api/config', configuracionRoutes); // <--- NUEVO
-app.use('/api/auth', authRoutes); // <--- NUEVO
-app.use('/api/usuarios', usuariosRoutes); // <--- NUEVO
+app.use('/api/config', configuracionRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 
-// Test
+// Ruta de prueba para verificar que el server vive
 app.get('/', (req, res) => {
-    res.send('¡API del Generador Bancario funcionando correctamente! 🚀');
+    res.send('✅ API BankPro funcionando correctamente en la nube ☁️');
 });
 
-// Iniciar
+// --- INICIO DEL SERVIDOR ---
 app.listen(PORT, () => {
     console.log(`------------------------------------------------`);
-    console.log(`✅ Servidor API corriendo en: http://localhost:${PORT}`);
+    console.log(`✅ Servidor API corriendo en puerto: ${PORT}`);
     console.log(`------------------------------------------------`);
 });
