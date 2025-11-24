@@ -5,8 +5,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = "postgresql://test:root@localhost:5432/banco_db"
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 // --- MÓDULO DE SEGURIDAD ---
