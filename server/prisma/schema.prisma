@@ -1,0 +1,109 @@
+// server/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://test:root@localhost:5432/banco_db"
+}
+
+// --- MÓDULO DE SEGURIDAD ---
+model Usuario {
+  id_usuario Int      @id @default(autoincrement())
+  nombre     String
+  correo     String   @unique
+  password   String   // Se guardará encriptada
+  rol        String   // 'ADMIN', 'OPERADOR'
+  creado_en  DateTime @default(now())
+  resetToken       String?  
+  resetTokenExpiry DateTime?
+}
+
+// --- MÓDULO 1: CLIENTES Y CUENTAS ---
+
+model Cliente {
+  id_cliente Int      @id @default(autoincrement())
+  nombre     String
+  cedula     String   @unique
+  telefono   String?
+  correo     String   @unique
+  creado_en  DateTime @default(now())
+  
+  // Relación: Un cliente tiene muchas cuentas
+  // onDelete: Cascade -> Si borro cliente, se borran sus cuentas
+  cuentas    Cuenta[] 
+}
+
+model Cuenta {
+  id_cuenta           Int      @id @default(autoincrement())
+  iban                String   @unique
+  num_cuenta_bancaria String   @unique
+  tipo_cuenta         String   
+  moneda              String   
+  saldo_inicial       Decimal  @default(0.00) @db.Decimal(15, 2)
+  saldo_actual        Decimal  @default(0.00) @db.Decimal(15, 2) 
+  creado_en           DateTime @default(now())
+
+  clienteId  Int
+  // onDelete: Cascade -> Si borro cliente, esta cuenta desaparece
+  cliente    Cliente      @relation(fields: [clienteId], references: [id_cliente], onDelete: Cascade)
+  
+  // Si borro cuenta, se borran sus movimientos
+  movimientos Movimiento[] 
+}
+
+// --- MÓDULO 2: MOVIMIENTOS ---
+
+model Movimiento {
+  id_movimiento    Int      @id @default(autoincrement())
+  num_documento    String
+  tipo_operacion   String   
+  fecha_movimiento DateTime
+  fecha_contable   DateTime
+  tarjeta          String?
+  monto            Decimal  @db.Decimal(15, 2)
+  creado_en        DateTime @default(now())
+
+  cuentaIban      String
+  // onDelete: Cascade -> Si borro cuenta, este movimiento desaparece
+  cuenta          Cuenta         @relation(fields: [cuentaIban], references: [iban], onDelete: Cascade)
+  
+  tipoDocumentoId Int
+  tipoDocumento   TipoDocumento  @relation(fields: [tipoDocumentoId], references: [id_tipo])
+  
+  conceptoId      Int
+  concepto        Concepto       @relation(fields: [conceptoId], references: [id_concepto])
+
+  @@unique([tipoDocumentoId, num_documento])
+}
+
+// --- MÓDULO 3: CONFIGURACIÓN ---
+
+model TipoDocumento {
+  id_tipo            Int          @id @default(autoincrement())
+  codigo             String       @unique 
+  descripcion        String
+  consecutivo_actual Int          @default(0)
+  movimientos        Movimiento[]
+}
+
+model Zona {
+  id_zona   Int        @id @default(autoincrement())
+  provincia String
+  distrito  String
+  conceptos Concepto[]
+
+  @@unique([provincia, distrito])
+}
+
+model Concepto {
+  id_concepto Int          @id @default(autoincrement())
+  descripcion String
+  estado      Boolean      @default(true)
+  
+  zonaId      Int
+  zona        Zona         @relation(fields: [zonaId], references: [id_zona])
+  movimientos Movimiento[]
+}
